@@ -43,6 +43,7 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
      *       all processes with given
      *        name in var proc_name
      */
+    /*thoai dep trai vcl*/
 
     return 0; 
 }
