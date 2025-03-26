@@ -12,6 +12,7 @@
 #include "syscall.h"
 #include "stdio.h"
 #include "libmem.h"
+#include "queue.h"
 
 int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
 {
@@ -43,7 +44,42 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
      *       all processes with given
      *        name in var proc_name
      */
-    /*thoai dep trai vcl*/
+    struct queue_t *running_queue  = &caller->running_list;
+    struct pcb_t *temp[10];
+    int new_size = 0;
+    
+    for (int i = 0; i < running_queue->size; i++) {
+        if (strcmp(running_queue->proc[i]->path, proc_name) == 0) {
+            if (running_queue->proc[i]->mm) free(running_queue->proc[i]->mm);
+            if (running_queue->proc[i]->page_table) free(running_queue->proc[i]->page_table);
+            free(running_queue->proc[i]);
+        } else {
+            temp[new_size++] = running_queue->proc[i];
+        }
+    }
+    for (int i = 0; i < new_size; i++) {
+        running_queue->proc[i] = temp[i];
+    }
+    running_queue->size = new_size;
+    
+    for (int q = 0; q < MAX_PRIO; q++) {
+        struct queue_t *mlq_queue = &caller->mlq_ready_queue[q];
+        new_size = 0;
+        
+        for (int i = 0; i < mlq_queue->size; i++) {
+            if (strcmp(mlq_queue->proc[i]->path, proc_name) == 0) {
+                if (mlq_queue->proc[i]->mm) free(mlq_queue->proc[i]->mm);
+                if (mlq_queue->proc[i]->page_table) free(mlq_queue->proc[i]->page_table);
+                free(mlq_queue->proc[i]);
+            } else {
+                temp[new_size++] = mlq_queue->proc[i];
+            }
+        }
+        for (int i = 0; i < new_size; i++) {
+            mlq_queue->proc[i] = temp[i];
+        }
+        mlq_queue->size = new_size;
+    }
 
     return 0; 
 }
