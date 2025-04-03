@@ -44,7 +44,7 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
      *       all processes with given
      *        name in var proc_name
      */
-    struct queue_t *running_queue  = &caller->running_list;
+    struct queue_t *running_queue  = caller->running_list;
     struct pcb_t *temp[10];
     int new_size = 0;
     
