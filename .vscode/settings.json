@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "mem.h": "c",
+        "stdio.h": "c",
+        "loader.h": "c",
+        "cpu.h": "c",
+        "mm.h": "c",
+        "common.h": "c",
+        "bitops.h": "c"
+    }
+}
