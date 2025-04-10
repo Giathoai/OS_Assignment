@@ -163,6 +163,17 @@ int MEMPHY_dump(struct memphy_struct *mp)
   /*TODO dump memphy contnt mp->storage
    *     for tracing the memory content
    */
+   if(mp && mp->storage)
+   {      
+      for(int i=0;i<mp->maxsz;i+=1)
+      {         
+         if(mp->storage[i]!=0)
+         {            
+            printf("\tRAM [%d, %d]\n",i,mp->storage[i]);
+         }
+      }
+   }      
+   return 0; 
    return 0;
 }
 

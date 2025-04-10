@@ -96,6 +96,9 @@ struct pcb_t
 	struct memphy_struct **mswp;
 	struct memphy_struct *active_mswp;
 	uint32_t active_mswp_id;
+#ifdef MM_PAGING_HEAP_GODOWN
+	uint32_t vmemsz;
+#endif
 #endif
 	struct page_table_t *page_table; // Page table
 	uint32_t bp;			 // Break pointer
