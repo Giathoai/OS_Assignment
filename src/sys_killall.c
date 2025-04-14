@@ -14,22 +14,54 @@
 #include "libmem.h"
 #include "queue.h"
 #include <stdlib.h>
-int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
+
+void free_process(struct pcb_t *proc)
+{
+    // Free all memory regions
+    for (int rgid = 0; rgid < PAGING_MAX_SYMTBL_SZ; rgid++)
+    {
+        if (proc->mm->symrgtbl[rgid].rg_start != -1)
+        {
+            libfree(proc, rgid);
+        }
+    }
+
+    // Free the memory management structure
+    if (proc->mm)
+    {
+        free(proc->mm);
+        proc->mm = NULL;
+    }
+
+    // Free the page table
+    if (proc->page_table)
+    {
+        free(proc->page_table);
+        proc->page_table = NULL;
+    }
+
+    // Free the PCB
+    free(proc);
+}
+
+int __sys_killall(struct pcb_t *caller, struct sc_regs *regs)
 {
     char proc_name[100];
     uint32_t data;
 
-    //hardcode for demo only
+    // hardcode for demo only
     uint32_t memrg = regs->a1;
-    
+
     /* TODO: Get name of the target proc */
-    //proc_name = libread..
+    // proc_name = libread..
     int i = 0;
     data = 0;
-    while(data != -1){
+    while (data != -1)
+    {
         libread(caller, memrg, i, &data);
-        proc_name[i]= data;
-        if(data == -1) proc_name[i]='\0';
+        proc_name[i] = data;
+        if (data == -1)
+            proc_name[i] = '\0';
         i++;
     }
     printf("The procname retrieved from memregionid %d is \"%s\"\n", memrg, proc_name);
@@ -37,49 +69,58 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
     /* TODO: Traverse proclist to terminate the proc
      *       stcmp to check the process match proc_name
      */
-    //caller->running_list
-    //caller->mlq_ready_queu
+    // caller->running_list
+    // caller->mlq_ready_queu
 
-    /* TODO Maching and terminating 
+    /* TODO Maching and terminating
      *       all processes with given
      *        name in var proc_name
      */
-    struct queue_t *running_queue  = caller->running_list;
+    struct queue_t *running_queue = caller->running_list;
     struct pcb_t *temp[10];
     int new_size = 0;
-    
-    for (int i = 0; i < running_queue->size; i++) {
-        if (strcmp(running_queue->proc[i]->path, proc_name) == 0) {
-            if (running_queue->proc[i]->mm) free(running_queue->proc[i]->mm);
-            if (running_queue->proc[i]->page_table) free(running_queue->proc[i]->page_table);
-            free(running_queue->proc[i]);
-        } else {
+
+    // Traverse the running queue and remove the process with the given name
+    for (int i = 0; i < running_queue->size; i++)
+    {
+        if (strcmp(running_queue->proc[i]->path, proc_name) == 0)
+        {
+            free_process(running_queue->proc[i]);
+        }
+        else
+        {
             temp[new_size++] = running_queue->proc[i];
         }
     }
-    for (int i = 0; i < new_size; i++) {
+    for (int i = 0; i < new_size; i++)
+    {
         running_queue->proc[i] = temp[i];
     }
     running_queue->size = new_size;
-    
-    for (int q = 0; q < MAX_PRIO; q++) {
+
+    // Traverse the mlq_ready_queue and remove the process with the given name
+    for (int q = 0; q < MAX_PRIO; q++)
+    {
         struct queue_t *mlq_queue = &caller->mlq_ready_queue[q];
         new_size = 0;
-        
-        for (int i = 0; i < mlq_queue->size; i++) {
-            if (strcmp(mlq_queue->proc[i]->path, proc_name) == 0) {
-                if (mlq_queue->proc[i]->mm) free(mlq_queue->proc[i]->mm);
-                if (mlq_queue->proc[i]->page_table) free(mlq_queue->proc[i]->page_table);
-                free(mlq_queue->proc[i]);
-            } else {
+
+        for (int i = 0; i < mlq_queue->size; i++)
+        {
+            if (strcmp(mlq_queue->proc[i]->path, proc_name) == 0)
+            {
+                free_process(mlq_queue->proc[i]);
+            }
+            else
+            {
                 temp[new_size++] = mlq_queue->proc[i];
             }
         }
-        for (int i = 0; i < new_size; i++) {
+        for (int i = 0; i < new_size; i++)
+        {
             mlq_queue->proc[i] = temp[i];
         }
         mlq_queue->size = new_size;
     }
 
-    return 0; 
+    return 0;
 }
