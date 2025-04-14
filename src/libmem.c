@@ -29,88 +29,103 @@ static pthread_mutex_t mmvm_lock = PTHREAD_MUTEX_INITIALIZER;
  *@rg_elmt: new region
  *
  */
-int enlist_vm_freerg_list(struct mm_struct *mm, struct vm_rg_struct* rg_elmt)
-{  
-    struct vm_rg_struct* rg_new_node = malloc(sizeof(struct vm_rg_struct));
-    if (!rg_new_node) {        
-      return -1;
+int enlist_vm_freerg_list(struct mm_struct *mm, struct vm_rg_struct *rg_elmt)
+{
+  struct vm_rg_struct *rg_new_node = malloc(sizeof(struct vm_rg_struct));
+  if (!rg_new_node)
+  {
+    return -1;
+  }
+
+  struct vm_area_struct *cur_vma = get_vma_by_num(mm, rg_elmt->vmaid);
+  if (!cur_vma)
+  {
+    free(rg_new_node);
+    return -1;
+  }
+
+  int vmaid = rg_elmt->vmaid;
+  int lower_bound = rg_elmt->rg_start;
+  int upper_bound = rg_elmt->rg_end;
+  int temp_lower_bound = (vmaid) ? (lower_bound + 1) : (lower_bound - 1);
+  int temp_upper_bound = (vmaid) ? (upper_bound - 1) : (upper_bound + 1);
+
+  // // Kiểm tra giá trị hợp lệ
+  if (lower_bound >= upper_bound && rg_elmt->vmaid == 0)
+  {
+    free(rg_new_node);
+    return -1;
+  }
+  if (lower_bound <= upper_bound && rg_elmt->vmaid == 1)
+  {
+    free(rg_new_node);
+    return -1;
+  }
+
+  // Cập nhật thông tin vùng mới
+  rg_new_node->rg_start = lower_bound;
+  rg_new_node->rg_end = upper_bound;
+  rg_new_node->rg_next = NULL;
+
+  struct vm_rg_struct *prev = NULL;
+
+  // Trường hợp danh sách trống hoặc vùng mới nằm trước tất cả
+  if (vmaid)
+  {
+    if (!cur_vma->vm_freerg_list || cur_vma->vm_freerg_list->rg_start <= upper_bound)
+    {
+      rg_new_node->rg_next = cur_vma->vm_freerg_list;
+      cur_vma->vm_freerg_list = rg_new_node;
     }
-
-    struct vm_area_struct* cur_vma = get_vma_by_num(mm, rg_elmt->vmaid);
-    if (!cur_vma) {        
-      free(rg_new_node);
-      return -1;
+    else
+    {
+      // Duyệt danh sách để tìm vị trí phù hợp
+      prev = cur_vma->vm_freerg_list;
+      while (prev->rg_next && prev->rg_next->rg_start > upper_bound)
+      {
+        prev = prev->rg_next;
+      }
+      rg_new_node->rg_next = prev->rg_next;
+      prev->rg_next = rg_new_node;
     }
-
-    int vmaid = rg_elmt->vmaid;
-    int lower_bound = rg_elmt->rg_start;
-    int upper_bound = rg_elmt->rg_end;
-    int temp_lower_bound = (vmaid) ? (lower_bound + 1) : (lower_bound - 1);
-    int temp_upper_bound = (vmaid) ? (upper_bound - 1) : (upper_bound + 1);    
-
-    // // Kiểm tra giá trị hợp lệ
-    if(lower_bound >= upper_bound && rg_elmt->vmaid == 0) {
-      free(rg_new_node);
-      return -1;
+  }
+  else
+  {
+    if (!cur_vma->vm_freerg_list || cur_vma->vm_freerg_list->rg_start >= upper_bound)
+    {
+      rg_new_node->rg_next = cur_vma->vm_freerg_list;
+      cur_vma->vm_freerg_list = rg_new_node;
     }
-    if(lower_bound <= upper_bound && rg_elmt->vmaid == 1) {
-      free(rg_new_node);
-      return -1;
+    else
+    {
+      // Duyệt danh sách để tìm vị trí phù hợp
+      prev = cur_vma->vm_freerg_list;
+      while (prev->rg_next && prev->rg_next->rg_start < upper_bound)
+      {
+        prev = prev->rg_next;
+      }
+      rg_new_node->rg_next = prev->rg_next;
+      prev->rg_next = rg_new_node;
     }
-  
-    // Cập nhật thông tin vùng mới
-    rg_new_node->rg_start = lower_bound;
-    rg_new_node->rg_end = upper_bound;
-    rg_new_node->rg_next = NULL;
+  }
 
-    struct vm_rg_struct* prev = NULL;  
+  // Merge với vùng liền kề phía trước (nếu có)
+  if (prev && prev->rg_end == temp_lower_bound)
+  {
+    prev->rg_end = upper_bound;
+    prev->rg_next = rg_new_node->rg_next;
+    free(rg_new_node);
+  }
 
-    // Trường hợp danh sách trống hoặc vùng mới nằm trước tất cả
-    if(vmaid){
-      if (!cur_vma->vm_freerg_list || cur_vma->vm_freerg_list->rg_start <= upper_bound) {
-        rg_new_node->rg_next = cur_vma->vm_freerg_list;
-        cur_vma->vm_freerg_list = rg_new_node;
-      } else {
-          // Duyệt danh sách để tìm vị trí phù hợp
-          prev = cur_vma->vm_freerg_list;
-          while (prev->rg_next && prev->rg_next->rg_start > upper_bound) {
-              prev = prev->rg_next;
-          }
-          rg_new_node->rg_next = prev->rg_next;
-          prev->rg_next = rg_new_node;
-      }            
-
-    }else{
-      if (!cur_vma->vm_freerg_list || cur_vma->vm_freerg_list->rg_start >= upper_bound) {
-        rg_new_node->rg_next = cur_vma->vm_freerg_list;
-        cur_vma->vm_freerg_list = rg_new_node;
-      } else {
-          // Duyệt danh sách để tìm vị trí phù hợp
-          prev = cur_vma->vm_freerg_list;
-          while (prev->rg_next && prev->rg_next->rg_start < upper_bound) {
-              prev = prev->rg_next;
-          }
-          rg_new_node->rg_next = prev->rg_next;
-          prev->rg_next = rg_new_node;
-      }        
-      
-    }    
-
-    // Merge với vùng liền kề phía trước (nếu có)
-    if (prev && prev->rg_end == temp_lower_bound) {
-      prev->rg_end = upper_bound;
-      prev->rg_next = rg_new_node->rg_next;
-      free(rg_new_node);
-    }    
-    
-    // Merge với vùng liền kề phía sau (nếu có)
-    struct vm_rg_struct *deleted = prev->rg_next; 
-    if (prev->rg_next && temp_upper_bound == prev->rg_next->rg_start) {
-      prev->rg_end = prev->rg_next->rg_end;
-      prev->rg_next = deleted->rg_next;
-      free(deleted);      
-    }
-    return 0;
+  // Merge với vùng liền kề phía sau (nếu có)
+  struct vm_rg_struct *deleted = prev->rg_next;
+  if (prev->rg_next && temp_upper_bound == prev->rg_next->rg_start)
+  {
+    prev->rg_end = prev->rg_next->rg_end;
+    prev->rg_next = deleted->rg_next;
+    free(deleted);
+  }
+  return 0;
 }
 
 /*get_symrg_byid - get mem region by region ID
@@ -120,10 +135,11 @@ int enlist_vm_freerg_list(struct mm_struct *mm, struct vm_rg_struct* rg_elmt)
  */
 struct vm_rg_struct *get_symrg_byid(struct mm_struct *mm, int rgid)
 {
-  if(rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
+  if (rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
     return NULL;
 
-  if(mm->symrgtbl[rgid].rg_start == -1 || mm->symrgtbl[rgid].rg_end == -1){
+  if (mm->symrgtbl[rgid].rg_start == -1 || mm->symrgtbl[rgid].rg_end == -1)
+  {
     printf("\tACCESS FREE REGION\n");
     return NULL;
   }
@@ -147,34 +163,32 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   // rgnode.vmaid
 
   if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
-  {        
+  {
     caller->mm->symrgtbl[rgid].rg_start = rgnode.rg_start;
     caller->mm->symrgtbl[rgid].rg_end = rgnode.rg_end;
 
     caller->mm->symrgtbl[rgid].vmaid = vmaid;
 
-    *alloc_addr = rgnode.rg_start;    
+    *alloc_addr = rgnode.rg_start;
     printf("\tregister: %d; start: %ld; end: %ld\n", rgid, caller->mm->symrgtbl[rgid].rg_start, caller->mm->symrgtbl[rgid].rg_end);
     print_pgtbl(caller, 0, -1);
 
     return 0;
-  }      
-  
+  }
 
-  pthread_mutex_init(&mmvm_lock,NULL);
+  pthread_mutex_init(&mmvm_lock, NULL);
   /* TODO: get_free_vmrg_area FAILED handle the region management (Fig.6)*/
-
 
   /* TODO retrive current vma if needed, current comment out due to compiler redundant warning*/
   /*Attempt to increate limit to get space */
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
   // int inc_sz = PAGING_PAGE_ALIGNSZ(size); // số lượng page cần -> làm tròn lên
-  //struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
-  
+  // struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
+
   int inc_limit_ret;
 
   /* TODO retrive old_sbrk if needed, current comment out due to compiler redundant warning*/
-  int old_sbrk = cur_vma->sbrk;  
+  int old_sbrk = cur_vma->sbrk;
 
   /* TODO INCREASE THE LIMIT
    * inc_vma_limit(caller, vmaid, inc_sz)
@@ -183,43 +197,44 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
 
   /* TODO: commit the limit increment */
   pthread_mutex_lock(&mmvm_lock);
-  if(abs(cur_vma->vm_end - cur_vma->sbrk) < size){
-    if(inc_vma_limit(caller, vmaid, size, &inc_limit_ret) != 0){
-      pthread_mutex_unlock(&mmvm_lock);      
+  if (abs(cur_vma->vm_end - cur_vma->sbrk) < size)
+  {
+    if (inc_vma_limit(caller, vmaid, size, &inc_limit_ret) != 0)
+    {
+      pthread_mutex_unlock(&mmvm_lock);
       return -1;
     }
   }
   pthread_mutex_unlock(&mmvm_lock);
 
-  /*Successful increase limit */  
-  if(vmaid == 0){
+  /*Successful increase limit */
+  if (vmaid == 0)
+  {
     caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
     caller->mm->symrgtbl[rgid].rg_end = old_sbrk + size - 1;
-    caller->mm->symrgtbl[rgid].vmaid = vmaid;    
-    cur_vma->sbrk += size;    
-
+    caller->mm->symrgtbl[rgid].vmaid = vmaid;
+    cur_vma->sbrk += size;
   }
-  else{
+  else
+  {
     caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
     caller->mm->symrgtbl[rgid].rg_end = old_sbrk - size + 1;
-    caller->mm->symrgtbl[rgid].vmaid = vmaid;    
-    cur_vma->sbrk -= size;    
+    caller->mm->symrgtbl[rgid].vmaid = vmaid;
+    cur_vma->sbrk -= size;
   }
 
   printf("\tregister: %d; start: %ld; end: %ld\n", rgid, caller->mm->symrgtbl[rgid].rg_start, caller->mm->symrgtbl[rgid].rg_end);
-  
 
   // collect the remain region
-  // for debug  
-  
+  // for debug
 
-  /* TODO: commit the allocation address 
+  /* TODO: commit the allocation address
   // *alloc_addr = ...
   */
 
   *alloc_addr = old_sbrk;
 
-  // for debug  
+  // for debug
   print_pgtbl(caller, 0, -1);
   return 0;
 }
@@ -373,19 +388,19 @@ int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller, 
     return -1; /* invalid page access */
 
   /* Calculate physical address */
-  int phyaddr = (fpn << PAGING_ADDR_OFFST_HIBIT + 1) + off;
+  int phyaddr = (fpn << (PAGING_ADDR_OFFST_HIBIT + 1)) + off;
 
   /* Set up system call arguments for memory read */
   struct sc_regs regs;
   regs.a1 = SYSMEM_IO_READ; // Operation: Read from memory
   regs.a2 = phyaddr;        // Physical address to read from
-  regs.a3 = 0;              // Not used for read operation
+  // regs.a3 = 0;              // Not used for read operation
 
   /* SYSCALL 17 sys_memmap to read data */
   syscall(caller, 17, &regs);
 
   /* Update data with read value */
-  *data = (BYTE)regs.a4; // Return value stored in a4
+  *data = (BYTE)regs.a3; // Return value stored in a3
 
   return 0;
 }
@@ -431,22 +446,26 @@ int pg_setval(struct mm_struct *mm, int addr, BYTE value, struct pcb_t *caller)
  */
 int __read(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE *data)
 {
-  struct vm_rg_struct *currg = get_symrg_byid(caller->mm, rgid);      
-  if(currg == NULL){    
+  struct vm_rg_struct *currg = get_symrg_byid(caller->mm, rgid);
+  if (currg == NULL)
+  {
     return -1;
-  }  
+  }
   int vm_id = currg->vmaid;
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vm_id);
-  if(cur_vma == NULL) /* Invalid memory identify */
-	  return -1;
-  if(offset > abs(currg->rg_start - currg->rg_end)){
+  if (cur_vma == NULL) /* Invalid memory identify */
+    return -1;
+  if (offset > abs(currg->rg_start - currg->rg_end))
+  {
     printf("\tACCESS OUT OF REGION\n");
     return -1;
-  } 
-  if(currg->vmaid == 0){
+  }
+  if (currg->vmaid == 0)
+  {
     pg_getval(caller->mm, currg->rg_start + offset, data, caller, cur_vma->vm_id);
   }
-  else{
+  else
+  {
     pg_getval(caller->mm, currg->rg_start - offset, data, caller, cur_vma->vm_id);
   }
   // pg_getval(caller->mm, currg->rg_start + offset, data, caller);

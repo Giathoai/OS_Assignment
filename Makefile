@@ -10,6 +10,8 @@ CC = gcc
 DEBUG = -g
 CFLAGS = -Wall -c $(DEBUG)
 LFLAGS = -Wall $(DEBUG)
+# CFLAGS = -Wall -c $(DEBUG) -fsanitize=address
+# LFLAGS = -Wall $(DEBUG) -fsanitize=address
 
 vpath %.c $(SRC)
 vpath %.h $(INCLUDE)

@@ -14,6 +14,7 @@
 #include "libmem.h"
 #include "queue.h"
 #include <stdlib.h>
+#include <pthread.h>
 
 void free_process(struct pcb_t *proc)
 {
@@ -40,6 +41,18 @@ void free_process(struct pcb_t *proc)
         proc->page_table = NULL;
     }
 
+    if (proc->code)
+    {
+        // Free the code segment
+        if (proc->code->text)
+        {
+            free(proc->code->text);
+            proc->code->text = NULL;
+        }
+        free(proc->code);
+        proc->code = NULL;
+    }
+
     // Free the PCB
     free(proc);
 }
@@ -56,12 +69,16 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs *regs)
     // proc_name = libread..
     int i = 0;
     data = 0;
-    while (data != -1)
+    while (1)
     {
         libread(caller, memrg, i, &data);
-        proc_name[i] = data;
-        if (data == -1)
+        if (data == (uint32_t)-1)
+        {
             proc_name[i] = '\0';
+            break;
+        }
+        proc_name[i] = (char)data;
+        printf("i = %d, data = %c\n", i, data);
         i++;
     }
     printf("The procname retrieved from memregionid %d is \"%s\"\n", memrg, proc_name);
@@ -70,12 +87,6 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs *regs)
      *       stcmp to check the process match proc_name
      */
     // caller->running_list
-    // caller->mlq_ready_queu
-
-    /* TODO Maching and terminating
-     *       all processes with given
-     *        name in var proc_name
-     */
     struct queue_t *running_queue = caller->running_list;
     struct pcb_t *temp[10];
     int new_size = 0;
@@ -98,6 +109,11 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs *regs)
     }
     running_queue->size = new_size;
 
+    /* TODO Maching and terminating
+     *       all processes with given
+     *        name in var proc_name
+     */
+    // caller->mlq_ready_queue
     // Traverse the mlq_ready_queue and remove the process with the given name
     for (int q = 0; q < MAX_PRIO; q++)
     {
