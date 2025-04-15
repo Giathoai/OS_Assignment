@@ -1,0 +1,24 @@
+
+[33m=== Running test: init_scheduler ===[0m
+[32m[PASS][0m Test: init_scheduler - Queue empty check
+[32m[PASS][0m Test: init_scheduler - get_proc returns NULL
+
+[33m=== Running test: add_proc ===[0m
+[32m[PASS][0m Test: add_proc - Queue not empty after adding
+[32m[PASS][0m Test: add_proc - get_proc returns added process
+
+[33m=== Running test: concurrent_scheduling ===[0m
+[32m[PASS][0m Test: concurrent_scheduling - Concurrent add_proc
+[32m[PASS][0m Test: concurrent_scheduling - No duplicate retrievals
+
+[33m=== Running test: Round Robin scheduling ===[0m
+[32m[PASS][0m Test: RR - First round retrieval order
+[32m[PASS][0m Test: RR - Second round rotation
+
+[33m=== Running test: edge cases ===[0m
+[32m[PASS][0m Test: edge_cases - Extreme priority handling
+[32m[PASS][0m Test: edge_cases - Maximum queue size handling
+Deleted process with PID=1
+
+[33m=== Running test: equal_metrics ===[0m
+[32m[PASS][0m Test: equal_metrics - Same metrics, FIFO order

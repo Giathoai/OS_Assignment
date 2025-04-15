@@ -1,0 +1,86 @@
+
+[33m=== Running test: init_mm ===[0m
+[32m[PASS][0m Test: init_mm - VMA0 creation
+[32m[PASS][0m Test: init_mm - VMA0 initial values
+[32m[PASS][0m Test: init_mm - VMA0 freerg_list
+
+[33m=== Running test: inc_vma_limit ===[0m
+
+=== ===
+[31m[FAIL][0m Test: inc_vma_limit - First increment (300 bytes)
+  Expected: inc1=512, sbrk=300, vm_end=512
+  Actual:   inc1=0, sbrk=300, vm_end=0
+
+=== ===
+[31m[FAIL][0m Test: inc_vma_limit - Second increment (400 bytes)
+  Expected: inc2=512, sbrk=912, vm_end=1024
+  Actual:   inc2=0, sbrk=400, vm_end=0
+
+=== ===
+[31m[FAIL][0m Test: inc_vma_limit - Second increment (100 bytes)
+  Expected: inc2=256, sbrk=1124, vm_end=1280
+  Actual:   inc2=0, sbrk=100, vm_end=0
+[32m[PASS][0m Test: inc_vma_limit - Free region update
+[31m[FAIL][0m Test: inc_vma_limit - Free region boundaries
+  Expected: rg_start=100, rg_end=0
+  Actual:   rg_start=0, rg_end=0
+
+[33m=== Running test: liballoc and libfree ===[0m
+[32m[PASS][0m Test: liballoc/libfree - Prepare memory space
+
+=== ===
+[31m[FAIL][0m Test: liballoc/libfree - Allocate memory (200 bytes, region 2)
+  Expected: alloc_addr == 0
+  Actual:   alloc_addr = -1
+	register: 2; start: 1096563168; end: 1096563267
+print_pgtbl: 0 - 256
+00000000: 80000000
+[31m[FAIL][0m Test: liballoc/libfree - Allocate memory (100 bytes, region 2)
+  Expected: alloc_addr == 256
+  Actual:   alloc_addr = 0
+
+[33m=== Running test: init_memphy ===[0m
+[32m[PASS][0m Test: init_memphy - Small memory initialization
+[32m[PASS][0m Test: init_memphy - Free frame count (small)
+[32m[PASS][0m Test: init_memphy - Large memory initialization
+[32m[PASS][0m Test: init_memphy - Free frame count (large)
+
+[33m=== Running test: MEMPHY_read/write ===[0m
+[32m[PASS][0m Test: MEMPHY_read/write - Write single byte
+[32m[PASS][0m Test: MEMPHY_read/write - Read single byte (return value)
+[32m[PASS][0m Test: MEMPHY_read/write - Read single byte (data integrity)
+[32m[PASS][0m Test: MEMPHY_read/write - Multiple bytes
+[32m[PASS][0m Test: MEMPHY_read/write - Invalid address handling
+
+[33m=== Running test: MEMPHY_get_freefp and MEMPHY_put_freefp ===[0m
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Initial frame count
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Get free frame (return value)
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Frame count after get
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Put free frame (return value)
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Frame count after put
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Multiple operations
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Multiple operations (return value)
+
+[33m=== Running test: Integration - Memory allocation and I/O ===[0m
+
+=== ===
+[31m[FAIL][0m Test: Integration - Memory allocation
+  Expected: inc > 0
+  Actual:   inc = 0
+
+[33m=== Running test: Edge cases - Boundary testing ===[0m
+
+=== ===
+[32m[PASS][0m Test: Edge cases - Zero-size allocation
+
+=== ===
+[31m[FAIL][0m Test: Edge cases - Very small allocation
+  Expected: inc_vma_limit returns 256 (aligned size)
+  Actual:   inc_vma_limit returns 0
+
+=== ===
+[32m[PASS][0m Test: Edge cases - Very large allocation
+	register: -1; start: 1048576; end: 1048675
+print_pgtbl: 0 - 0
+[32m[PASS][0m Test: Edge cases - Invalid region ID for allocation
+[32m[PASS][0m Test: Edge cases - Non-existent region ID for free

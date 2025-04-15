@@ -76,6 +76,9 @@ struct page_table_t
 /* PCB, describe information about a process */
 struct pcb_t
 {
+	int arrival_time;
+	int burst_time;
+	int remaining_time;
 	uint32_t pid;		 // PID
 	uint32_t priority;	 // Default priority, this legacy process based (FIXED)
 	char path[100];

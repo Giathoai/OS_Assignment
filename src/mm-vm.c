@@ -98,8 +98,7 @@ int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, int vmastart, int 
   {
     check = (vmaend - check_vma->vm_end) < 0 ? 0 : 1;
   }
-  return OVERLAP(vmastart, vmaend, vma->vm_start, vma->vm_end) || check;
-  return 0;
+  return check;
 }
 
 /*inc_vma_limit - increase vm area limits to reserve space for new variable
@@ -108,39 +107,33 @@ int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, int vmastart, int 
  *@inc_sz: increment size
  *
  */
-int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz, int* inc_limit_ret)
-{
+int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz, int inc_limit_ret) {
   struct vm_rg_struct *newrg = malloc(sizeof(struct vm_rg_struct));
+  printf("\n=== ===\n");
+  
   int inc_amt = PAGING_PAGE_ALIGNSZ(inc_sz);
   int incnumpage = inc_amt / PAGING_PAGESZ;
   struct vm_rg_struct *area = get_vm_area_node_at_brk(caller, vmaid, inc_sz, inc_amt);
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
-
+  
   int old_end = cur_vma->vm_end;
-
+  
   /*Validate overlap of obtained region */
   if (validate_overlap_vm_area(caller, vmaid, area->rg_start, area->rg_end) < 0)
     return -1; /*Overlap and failed allocation */
-
-  /* TODO: Obtain the new vm area based on vmaid */
-  // cur_vma->vm_end...
-  //  inc_limit_ret...
-
-  if (vmaid == 0)
-  {
-    cur_vma->vm_end += inc_amt;
-    newrg->vmaid = 0;
-  }
-  else
-  {
-    cur_vma->vm_end -= inc_amt;
-    newrg->vmaid = 1;
-  }
-  *inc_limit_ret = cur_vma->vm_end;
-
-  if (vm_map_ram(caller, area->rg_start, area->rg_end,
+  
+  /* Cập nhật các giá trị cần thiết */
+  cur_vma->vm_end = old_end + inc_amt;  // Tăng vm_end thêm inc_amt
+  cur_vma->sbrk = inc_limit_ret;        // Cập nhật sbrk thành inc_limit_ret (300)
+  
+  newrg->vmaid = vmaid;                 // Sử dụng vmaid được truyền vào
+  
+  /* Map the memory to MEMRAM */
+  if (vm_map_ram(caller, area->rg_start, area->rg_end, 
                  old_end, incnumpage, newrg) < 0)
-    return -1; /* Map the memory to MEMRAM */
+    return -1;
+  
+  return inc_amt;
 }
 
 // #endif

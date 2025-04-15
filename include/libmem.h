@@ -17,7 +17,7 @@
 #define SYSMEM_IO_WRITE 5
 
 extern struct vm_area_struct *get_vma_by_num(struct mm_struct *mm, int vmaid);
-int inc_vma_limit(struct pcb_t*, int, int, int*);
+int inc_vma_limit(struct pcb_t*, int, int, int);
 int __mm_swap_page(struct pcb_t*, int, int);
 int liballoc(struct pcb_t *, uint32_t, uint32_t);
 int libfree(struct pcb_t *, uint32_t);
