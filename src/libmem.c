@@ -199,7 +199,7 @@
    pthread_mutex_lock(&mmvm_lock);
    if (abs(cur_vma->vm_end - cur_vma->sbrk) < size)
    {
-     if (inc_vma_limit(caller, vmaid, size, &inc_limit_ret) != 0)
+     if (inc_vma_limit(caller, vmaid, size) != 0)
      {
        pthread_mutex_unlock(&mmvm_lock);
        return -1;

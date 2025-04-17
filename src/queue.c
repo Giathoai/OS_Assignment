@@ -29,7 +29,6 @@ struct pcb_t * dequeue(struct queue_t * q) {
                         q -> proc[i] = q -> proc[i + 1];
                 }
                 q -> size--;
-                q -> proc[n - 1] = NULL;
 
                 return proc;
         }

@@ -220,7 +220,7 @@ int test_inc_vma_limit() {
     // Test 2.1: First inc rement (300 bytes)
     int expected_inc1 = PAGING_PAGE_ALIGNSZ(300);
 
-    int ret1 = inc_vma_limit(proc, 0,0, 300);
+    int ret1 = inc_vma_limit(proc, 0, 300);
 
     int pass1 = (ret1 == expected_inc1) && (vma0->sbrk == 300) && (vma0->vm_end == expected_inc1);
     char expected[128], actual[128];
@@ -230,7 +230,7 @@ int test_inc_vma_limit() {
 
     // Test 2.2: Second increment (400 bytes)
     int expected_inc2 = PAGING_PAGE_ALIGNSZ(400);
-    int ret2 = inc_vma_limit(proc, 0,0, 400);
+    int ret2 = inc_vma_limit(proc, 0, 400);
     int pass2 = (ret2 == expected_inc2) && 
                 (vma0->sbrk == 912) &&
                 (vma0->vm_end == expected_inc1 + expected_inc2);
@@ -242,7 +242,7 @@ int test_inc_vma_limit() {
 
     // Test 2.3: Third increment (100 bytes)
     int expected_inc3 = PAGING_PAGE_ALIGNSZ(100);
-    int ret3 = inc_vma_limit(proc, 0,0, 100);
+    int ret3 = inc_vma_limit(proc, 0, 100);
     int pass3 = (ret3 == expected_inc3) && 
                 (vma0->sbrk == 1124) &&
                 (vma0->vm_end == 1280);
@@ -592,7 +592,7 @@ int test_integration_alloc_io() {
     if (!proc) return 0;
     
     // Test 7.1: Allocate memory space with inc_vma_limit
-    int inc = inc_vma_limit(proc, 0,0, 512);
+    int inc = inc_vma_limit(proc, 0, 512);
     int pass1 = (inc > 0);
     char expected[128], actual[128];
     sprintf(expected, "inc > 0");
@@ -659,7 +659,7 @@ int test_edge_cases() {
     if (!proc) return 0;
     
     // Test 8.1: Zero-size memory allocation request
-    int inc1 = inc_vma_limit(proc, 0,0, 0);
+    int inc1 = inc_vma_limit(proc, 0, 0);
     int pass1 = (inc1 >= 0); // Should be handled gracefully
     char expected[128], actual[128];
     sprintf(expected, "inc_vma_limit handles zero-size");
@@ -667,7 +667,7 @@ int test_edge_cases() {
     print_result("Edge cases - Zero-size allocation", expected, actual, pass1);
     
     // Test 8.2: Very small allocation
-    int inc2 = inc_vma_limit(proc, 0,0, 1);
+    int inc2 = inc_vma_limit(proc, 0, 1);
     int expected_inc2 = PAGING_PAGE_ALIGNSZ(1); // Should be aligned to page size
     int pass2 = (inc2 == expected_inc2);
     sprintf(expected, "inc_vma_limit returns %d (aligned size)", expected_inc2);
@@ -677,7 +677,7 @@ int test_edge_cases() {
     // Test 8.3: Very large allocation
     // This might fail depending on available memory, but should be handled gracefully
     int large_size = 1024 * 1024; // 1MB
-    int inc3 = inc_vma_limit(proc, 0,0, large_size);
+    int inc3 = inc_vma_limit(proc, 0, large_size);
     int pass3 = 1; // Mark as passed regardless of outcome, as we're just testing for crashes
     sprintf(expected, "inc_vma_limit handles large size gracefully");
     sprintf(actual, "inc_vma_limit returns %d", inc3);
@@ -768,7 +768,7 @@ int test_vm_area_management() {
     if (!proc) return 0;
     
     // Allocate some initial memory space
-    inc_vma_limit(proc, 0,0, 512);
+    inc_vma_limit(proc, 0, 512);
     
     // Test 10.1: Test get_vm_area_node_at_brk - basic allocation
     struct vm_rg_struct *rg1 = get_vm_area_node_at_brk(proc, 0, 200, 256);
@@ -819,8 +819,8 @@ int test_page_swapping() {
     if (!proc) return 0;
     
     // Setup memory for swapping
-    inc_vma_limit(proc, 0,0, 1024);
-    inc_vma_limit(proc, 0,0, 100);
+    inc_vma_limit(proc, 0, 1024);
+    inc_vma_limit(proc, 0, 100);
     
     // Test 11.1: Basic swap operation between two frames
     int vicfpn = 0; // Victim frame page number
@@ -900,7 +900,7 @@ int test_memory_mapping() {
     struct vm_rg_struct ret_rg;
     memset(&ret_rg, 0, sizeof(ret_rg));
     
-    inc_vma_limit(proc, 0, 0, 1024); // Ensure we have virtual memory space
+    inc_vma_limit(proc, 0, 1024); // Ensure we have virtual memory space
     
     int addr = 0x1000;  // Starting address (page-aligned)
     int pgnum = 3;      // Number of pages to map
@@ -935,7 +935,7 @@ int test_fragmentation_management() {
     if (!proc) return 0;
     
     // Ensure we have memory space
-    inc_vma_limit(proc, 0,0, 1024);
+    inc_vma_limit(proc, 0, 1024);
     
     // Test 13.1: Create a free region
     struct vm_rg_struct *new_rg = (struct vm_rg_struct*)malloc(sizeof(struct vm_rg_struct));
@@ -1016,7 +1016,7 @@ int test_multiple_vma_management() {
     print_result("Multiple VM Areas - Initial VMA existence", expected, actual, pass1);
     
     // Create space for allocation
-    inc_vma_limit(proc, 0,0, 1024);
+    inc_vma_limit(proc, 0, 1024);
     
     // Test 14.2: Allocate in multiple regions
     pthread_mutex_lock(&mmvm_lock);
@@ -1078,7 +1078,7 @@ int test_error_handling() {
     if (!proc) return 0;
     
     // Test 15.1: Try operations on invalid VMA
-    int ret1 = inc_vma_limit(proc, 999,0, 100); // Invalid VMA ID
+    int ret1 = inc_vma_limit(proc, 999, 100); // Invalid VMA ID
     int pass1 = (ret1 <= 0); // Should not succeed
     char expected[128], actual[128];
     sprintf(expected, "inc_vma_limit with invalid VMA returns error (<=0)");
@@ -1093,7 +1093,7 @@ int test_error_handling() {
     print_result("Error Handling - Invalid region lookup", expected, actual, pass2);
     
     // Test 15.3: Multiple operations with NULL pcb
-    int ret3a = inc_vma_limit(NULL, 0 ,0, 100);
+    int ret3a = inc_vma_limit(NULL, 0 , 100);
     int ret3b = libfree(NULL, 1);
     pthread_mutex_lock(&mmvm_lock);
     int ret3c = liballoc(NULL, 100, 1);
