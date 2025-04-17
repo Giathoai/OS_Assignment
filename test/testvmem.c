@@ -682,17 +682,19 @@ int test_edge_cases() {
     sprintf(expected, "inc_vma_limit handles large size gracefully");
     sprintf(actual, "inc_vma_limit returns %d", inc3);
     print_result("Edge cases - Very large allocation", expected, actual, pass3);
-    
+
     // Test 8.4: Invalid region ID for liballoc/libfree
     pthread_mutex_lock(&mmvm_lock);
+
     int alloc_addr = liballoc(proc, 100, -1); // Invalid region ID
+
     pthread_mutex_unlock(&mmvm_lock);
-    
+
     int pass4 = 1; // We're just checking it doesn't crash
     sprintf(expected, "liballoc handles invalid region ID gracefully");
     sprintf(actual, "liballoc returns %d", alloc_addr);
     print_result("Edge cases - Invalid region ID for allocation", expected, actual, pass4);
-    
+
     int free_ret = libfree(proc, 999); // Non-existent region ID
     int pass5 = 1; // We're just checking it doesn't crash
     sprintf(expected, "libfree handles non-existent region ID gracefully");

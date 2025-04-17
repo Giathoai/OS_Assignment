@@ -161,7 +161,9 @@
  
    /* TODO: commit the vmaid */
    // rgnode.vmaid
- 
+   if (rgid < 0){
+    return -1;
+   }
    if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
    {
      caller->mm->symrgtbl[rgid].rg_start = rgnode.rg_start;
@@ -177,29 +179,15 @@
    }
  
    pthread_mutex_init(&mmvm_lock, NULL);
-   /* TODO: get_free_vmrg_area FAILED handle the region management (Fig.6)*/
- 
-   /* TODO retrive current vma if needed, current comment out due to compiler redundant warning*/
-   /*Attempt to increate limit to get space */
+  
    struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
-   // int inc_sz = PAGING_PAGE_ALIGNSZ(size); // số lượng page cần -> làm tròn lên
-   // struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
  
-   int inc_limit_ret;
- 
-   /* TODO retrive old_sbrk if needed, current comment out due to compiler redundant warning*/
    int old_sbrk = cur_vma->sbrk;
  
-   /* TODO INCREASE THE LIMIT
-    * inc_vma_limit(caller, vmaid, inc_sz)
-    */
-   // inc_vma_limit(caller, vmaid, inc_sz, &inc_limit_ret);
- 
-   /* TODO: commit the limit increment */
    pthread_mutex_lock(&mmvm_lock);
    if (abs(cur_vma->vm_end - cur_vma->sbrk) < size)
    {
-     if (inc_vma_limit(caller, vmaid, size) != 0)
+     if (inc_vma_limit(caller, vmaid, size) == -1)
      {
        pthread_mutex_unlock(&mmvm_lock);
        return -1;
@@ -207,7 +195,6 @@
    }
    pthread_mutex_unlock(&mmvm_lock);
  
-   /*Successful increase limit */
    if (vmaid == 0)
    {
      caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
@@ -224,14 +211,6 @@
    }
  
    printf("\tregister: %d; start: %ld; end: %ld\n", rgid, caller->mm->symrgtbl[rgid].rg_start, caller->mm->symrgtbl[rgid].rg_end);
- 
-   // collect the remain region
-   // for debug
- 
-   /* TODO: commit the allocation address
-   // *alloc_addr = ...
-   */
- 
    *alloc_addr = old_sbrk;
  
    // for debug
@@ -379,9 +358,11 @@
   */
  int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller, int vmaid)
  {
-   int pgn = PAGING_PGN(addr);
-   int off = PAGING_OFFST(addr);
-   int fpn;
+  int pgn = PAGING_PGN(addr);
+  int off = PAGING_OFFST(addr);
+  pgn = vmaid ? (pgn + 1) : pgn;
+  off = vmaid ? (256 - off) : off;
+  int fpn;
  
    /* Get the page to MEMRAM, swap from MEMSWAP if needed */
    if (pg_getpage(mm, pgn, &fpn, caller) != 0)
@@ -394,13 +375,11 @@
    struct sc_regs regs;
    regs.a1 = SYSMEM_IO_READ; // Operation: Read from memory
    regs.a2 = phyaddr;        // Physical address to read from
-   // regs.a3 = 0;              // Not used for read operation
- 
-   /* SYSCALL 17 sys_memmap to read data */
+   // regs.a3 = 0;             
+   
    syscall(caller, 17, &regs);
  
-   /* Update data with read value */
-   *data = (BYTE)regs.a3; // Return value stored in a3
+   *data = (BYTE)regs.a3; 
  
    return 0;
  }
@@ -422,7 +401,7 @@
      return -1; /* invalid page access */
  
    /* Calculate physical address */
-   int phyaddr = (fpn << PAGING_ADDR_OFFST_HIBIT + 1) + off;
+   int phyaddr = (fpn * PAGING_ADDR_OFFST_HIBIT + 1) + off;
  
    /* Set up system call arguments for memory write */
    struct sc_regs regs;
@@ -689,11 +668,9 @@
        }
      }
  
-     // Move to the next region in the free list
      rgit = rgit->rg_next;
    }
  
-   // Check if a suitable region was found
    if (newrg->rg_start == -1)
      return -1;
  

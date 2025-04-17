@@ -52,15 +52,10 @@
  struct vm_rg_struct *get_vm_area_node_at_brk(struct pcb_t *caller, int vmaid, int size, int alignedsz)
  {
    struct vm_rg_struct *newrg;
-   /* TODO retrive current vma to obtain newrg, current comment out due to compiler redundant warning*/
    struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
  
    newrg = malloc(sizeof(struct vm_rg_struct));
  
-   /* TODO: update the newrg boundary
-   // newrg->rg_start = ...
-   // newrg->rg_end = ...
-   */
    if (vmaid == 0)
    {
      newrg->vmaid = 0;
@@ -69,7 +64,6 @@
    }
    else
    {
-     // implement for heap segment
      newrg->rg_start = cur_vma->sbrk;
      newrg->rg_end = newrg->rg_start - size + 1;
      newrg->vmaid = 1;
@@ -87,18 +81,18 @@
   */
  int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, int vmastart, int vmaend)
  {
-   struct vm_area_struct *vma = get_vma_by_num(caller->mm, vmaid);
-   struct vm_area_struct *check_vma = get_vma_by_num(caller->mm, (vmaid) ? 0 : 1);
-   unsigned char check = 0;
-   if (vmaid)
-   {
-     check = (vmaend - check_vma->vm_end) > 0 ? 0 : 1;
-   }
-   else
-   {
-     check = (vmaend - check_vma->vm_end) < 0 ? 0 : 1;
-   }
-   return check;
+  struct vm_area_struct *vma = caller->mm->mmap;
+  while (vma != NULL)
+  {
+    if ((vmastart >= vma->vm_start && vmastart < vma->vm_end) ||
+        (vmaend > vma->vm_start && vmaend <= vma->vm_end) ||
+        (vmaend > vma->vm_start && vmastart < vma->vm_end))
+    {
+      return -1;
+    }
+    vma = vma->vm_next;
+  }
+  return 0;
  }
  
  /*inc_vma_limit - increase vm area limits to reserve space for new variable
@@ -121,7 +115,6 @@
      return -1; 
      
   cur_vma->sbrk =cur_vma->vm_end;
-
   cur_vma->vm_end = old_end + inc_amt;  
    cur_vma->sbrk += inc_sz;
    newrg->vmaid = vmaid;               
@@ -130,6 +123,14 @@
                   old_end, incnumpage, newrg) < 0)
      return -1;
    
+    if (inc_sz < inc_amt){
+      struct vm_rg_struct *newfreerg = malloc(sizeof(struct vm_rg_struct));
+      newfreerg->rg_start = cur_vma->sbrk;
+      newfreerg->rg_end = newrg->rg_end;
+      struct vm_rg_struct *freerg = cur_vma->vm_freerg_list;
+      newfreerg->rg_next = freerg;
+      cur_vma->vm_freerg_list = newfreerg;
+    }
    return inc_amt;
  }
  

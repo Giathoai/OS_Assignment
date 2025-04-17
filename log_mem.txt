@@ -6,21 +6,27 @@
 
 [33m=== Running test: inc_vma_limit ===[0m
 [32m[PASS][0m Test: inc_vma_limit - First increment (300 bytes)
-[32m[PASS][0m Test: inc_vma_limit - Second increment (400 bytes)
-[32m[PASS][0m Test: inc_vma_limit - Second increment (100 bytes)
+[31m[FAIL][0m Test: inc_vma_limit - Second increment (400 bytes)
+  Expected: inc2=512, sbrk=912, vm_end=1024
+  Actual:   inc2=-1, sbrk=300, vm_end=512
+[31m[FAIL][0m Test: inc_vma_limit - Second increment (100 bytes)
+  Expected: inc2=256, sbrk=1124, vm_end=1280
+  Actual:   inc2=-1, sbrk=300, vm_end=512
 [32m[PASS][0m Test: inc_vma_limit - Free region update
-[31m[FAIL][0m Test: inc_vma_limit - Free region boundaries
-  Expected: rg_start=1124, rg_end=1280
-  Actual:   rg_start=0, rg_end=0
+[32m[PASS][0m Test: inc_vma_limit - Free region boundaries
 
 [33m=== Running test: liballoc and libfree ===[0m
 [32m[PASS][0m Test: liballoc/libfree - Prepare memory space
-[31m[FAIL][0m Test: liballoc/libfree - Allocate memory (200 bytes, region 2)
-  Expected: alloc_addr == 0
-  Actual:   alloc_addr = -1
+	register: 2; start: 0; end: 199
+print_pgtbl: 0 - 256
+00000000: 80000000
+[32m[PASS][0m Test: liballoc/libfree - Allocate memory (200 bytes, region 2)
+	register: 2; start: 400; end: 499
+print_pgtbl: 0 - 256
+00000000: 80000000
 [31m[FAIL][0m Test: liballoc/libfree - Allocate memory (100 bytes, region 2)
   Expected: alloc_addr == 256
-  Actual:   alloc_addr = -1
+  Actual:   alloc_addr = 0
 
 [33m=== Running test: init_memphy ===[0m
 [32m[PASS][0m Test: init_memphy - Small memory initialization
@@ -46,9 +52,32 @@
 
 [33m=== Running test: Integration - Memory allocation and I/O ===[0m
 [32m[PASS][0m Test: Integration - Memory allocation
-[31m[FAIL][0m Test: Integration - Region allocation
-  Expected: alloc_addr >= 0
-  Actual:   alloc_addr = -1
+	register: 3; start: 512; end: 767
+print_pgtbl: 0 - 768
+00000000: 80000001
+00000004: 80000000
+00000008: 80000002
+[32m[PASS][0m Test: Integration - Region allocation
+write region=3 offset=10 value=66
+print_pgtbl: 0 - 768
+00000000: 80000001
+00000004: 80000000
+00000008: 80000002
+[32m[PASS][0m Test: Integration - Write to region
+read region=3 offset=10 value=7
+print_pgtbl: 0 - 768
+00000000: 80000001
+00000004: 80000000
+00000008: 80000002
+[32m[PASS][0m Test: Integration - Read from region (return value)
+[31m[FAIL][0m Test: Integration - Read from region (data integrity)
+  Expected: read_data = 0x42
+  Actual:   read_data = 0x07
+print_pgtbl: 0 - 768
+00000000: 80000001
+00000004: 80000000
+00000008: 80000002
+[32m[PASS][0m Test: Integration - Free region
 
 [33m=== Running test: Edge cases - Boundary testing ===[0m
 [32m[PASS][0m Test: Edge cases - Zero-size allocation
@@ -70,9 +99,7 @@
 [31m[FAIL][0m Test: VM Area Management - Region boundaries
   Expected: Region with start=512, end=768
   Actual:   Region with start=512, end=711
-[31m[FAIL][0m Test: VM Area Management - validate_overlap_vm_area non-overlapping
-  Expected: validate_overlap_vm_area returns 0 (no overlap)
-  Actual:   validate_overlap_vm_area returns 1
+[32m[PASS][0m Test: VM Area Management - validate_overlap_vm_area non-overlapping
 [32m[PASS][0m Test: VM Area Management - validate_overlap_vm_area overlapping
 
 [33m=== Running test: Page Swapping ===[0m
@@ -92,3 +119,6 @@
 [32m[PASS][0m Test: Memory Mapping - Mapping region validity
 
 [33m=== Running test: Fragmentation Management ===[0m
+[31m[FAIL][0m Test: Fragmentation Management - enlist_vm_freerg_list return
+  Expected: enlist_vm_freerg_list returns 0
+  Actual:   enlist_vm_freerg_list returns -1
