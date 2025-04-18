@@ -80,20 +80,20 @@
   *
   */
  int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, int vmastart, int vmaend)
- {
-  struct vm_area_struct *vma = caller->mm->mmap;
-  while (vma != NULL)
-  {
-    if ((vmastart >= vma->vm_start && vmastart < vma->vm_end) ||
-        (vmaend > vma->vm_start && vmaend <= vma->vm_end) ||
-        (vmaend > vma->vm_start && vmastart < vma->vm_end))
-    {
-      return -1;
-    }
-    vma = vma->vm_next;
+{
+  struct vm_area_struct *vma = get_vma_by_num(caller->mm, vmaid);
+  unsigned char check;
+  if(vmaid){
+    check = (vmaend - vma->vm_end) > 0 ? -1 : 0;
   }
-  return 0;
- }
+  else{
+    
+    check = ((vmaend - vma->vm_end) < 0 || ((vmastart >= vma->vm_start) && (vmastart < vma->vm_end)) || ((vmastart <= vma->vm_start) && (vmaend >= vma->vm_end))) ? -1 : 0;
+  }
+  /* TODO validate the planned memory area is not overlapped */
+  /* Nếu không phát hiện trùng lặp, trả về 0 */
+  return check;
+}
  
  /*inc_vma_limit - increase vm area limits to reserve space for new variable
   *@caller: caller
@@ -102,6 +102,8 @@
   *
   */
  int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz) {
+  if(!caller) return -1;
+  if(vmaid > 1 || vmaid < 0) return -1;
    struct vm_rg_struct *newrg = malloc(sizeof(struct vm_rg_struct));
    
    int inc_amt = PAGING_PAGE_ALIGNSZ(inc_sz);
@@ -111,9 +113,9 @@
    
    int old_end = cur_vma->vm_end;
    
-   if (validate_overlap_vm_area(caller, vmaid, area->rg_start, area->rg_end) < 0)
+   if (validate_overlap_vm_area(caller, vmaid, area->rg_start, area->rg_end) < 0){
      return -1; 
-     
+   }
   cur_vma->sbrk =cur_vma->vm_end;
   cur_vma->vm_end = old_end + inc_amt;  
    cur_vma->sbrk += inc_sz;

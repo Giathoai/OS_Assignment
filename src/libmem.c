@@ -31,100 +31,17 @@
   */
  int enlist_vm_freerg_list(struct mm_struct *mm, struct vm_rg_struct *rg_elmt)
  {
-   struct vm_rg_struct *rg_new_node = malloc(sizeof(struct vm_rg_struct));
-   if (!rg_new_node)
-   {
+   struct vm_rg_struct *rg_node = mm->mmap->vm_freerg_list;
+ 
+   if (rg_elmt->rg_start >= rg_elmt->rg_end)
      return -1;
-   }
  
-   struct vm_area_struct *cur_vma = get_vma_by_num(mm, rg_elmt->vmaid);
-   if (!cur_vma)
-   {
-     free(rg_new_node);
-     return -1;
-   }
+   if (rg_node != NULL)
+     rg_elmt->rg_next = rg_node;
  
-   int vmaid = rg_elmt->vmaid;
-   int lower_bound = rg_elmt->rg_start;
-   int upper_bound = rg_elmt->rg_end;
-   int temp_lower_bound = (vmaid) ? (lower_bound + 1) : (lower_bound - 1);
-   int temp_upper_bound = (vmaid) ? (upper_bound - 1) : (upper_bound + 1);
+   /* Enlist the new region */
+   mm->mmap->vm_freerg_list = rg_elmt;
  
-   // // Kiểm tra giá trị hợp lệ
-   if (lower_bound >= upper_bound && rg_elmt->vmaid == 0)
-   {
-     free(rg_new_node);
-     return -1;
-   }
-   if (lower_bound <= upper_bound && rg_elmt->vmaid == 1)
-   {
-     free(rg_new_node);
-     return -1;
-   }
- 
-   // Cập nhật thông tin vùng mới
-   rg_new_node->rg_start = lower_bound;
-   rg_new_node->rg_end = upper_bound;
-   rg_new_node->rg_next = NULL;
- 
-   struct vm_rg_struct *prev = NULL;
- 
-   // Trường hợp danh sách trống hoặc vùng mới nằm trước tất cả
-   if (vmaid)
-   {
-     if (!cur_vma->vm_freerg_list || cur_vma->vm_freerg_list->rg_start <= upper_bound)
-     {
-       rg_new_node->rg_next = cur_vma->vm_freerg_list;
-       cur_vma->vm_freerg_list = rg_new_node;
-     }
-     else
-     {
-       // Duyệt danh sách để tìm vị trí phù hợp
-       prev = cur_vma->vm_freerg_list;
-       while (prev->rg_next && prev->rg_next->rg_start > upper_bound)
-       {
-         prev = prev->rg_next;
-       }
-       rg_new_node->rg_next = prev->rg_next;
-       prev->rg_next = rg_new_node;
-     }
-   }
-   else
-   {
-     if (!cur_vma->vm_freerg_list || cur_vma->vm_freerg_list->rg_start >= upper_bound)
-     {
-       rg_new_node->rg_next = cur_vma->vm_freerg_list;
-       cur_vma->vm_freerg_list = rg_new_node;
-     }
-     else
-     {
-       // Duyệt danh sách để tìm vị trí phù hợp
-       prev = cur_vma->vm_freerg_list;
-       while (prev->rg_next && prev->rg_next->rg_start < upper_bound)
-       {
-         prev = prev->rg_next;
-       }
-       rg_new_node->rg_next = prev->rg_next;
-       prev->rg_next = rg_new_node;
-     }
-   }
- 
-   // Merge với vùng liền kề phía trước (nếu có)
-   if (prev && prev->rg_end == temp_lower_bound)
-   {
-     prev->rg_end = upper_bound;
-     prev->rg_next = rg_new_node->rg_next;
-     free(rg_new_node);
-   }
- 
-   // Merge với vùng liền kề phía sau (nếu có)
-   struct vm_rg_struct *deleted = prev->rg_next;
-   if (prev->rg_next && temp_upper_bound == prev->rg_next->rg_start)
-   {
-     prev->rg_end = prev->rg_next->rg_end;
-     prev->rg_next = deleted->rg_next;
-     free(deleted);
-   }
    return 0;
  }
  
@@ -270,7 +187,7 @@
  {
    /* TODO Implement allocation on vm area 0 */
    int addr;
- 
+   if(!proc) return -1;
    /* By default using vmaid = 0 */
    return __alloc(proc, 0, reg_index, size, &addr);
  }
@@ -284,7 +201,7 @@
  int libfree(struct pcb_t *proc, uint32_t reg_index)
  {
    /* TODO Implement free region */
- 
+   if(!proc) return -1;
    /* By default using vmaid = 0 */
    return __free(proc, 0, reg_index);
  }
