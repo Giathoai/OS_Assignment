@@ -189,7 +189,7 @@
    int addr;
    if(!proc) return -1;
    /* By default using vmaid = 0 */
-   return __alloc(proc, 0, reg_index, size, &addr);
+   return __alloc(proc, 1, reg_index, size, &addr);
  }
  
  /*libfree - PAGING-based free a region memory
@@ -274,32 +274,32 @@
   *
   */
  int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller, int vmaid)
- {
+{
   int pgn = PAGING_PGN(addr);
   int off = PAGING_OFFST(addr);
-  pgn = vmaid ? (pgn + 1) : pgn;
-  off = vmaid ? (256 - off) : off;
   int fpn;
- 
-   /* Get the page to MEMRAM, swap from MEMSWAP if needed */
-   if (pg_getpage(mm, pgn, &fpn, caller) != 0)
-     return -1; /* invalid page access */
- 
-   /* Calculate physical address */
-   int phyaddr = (fpn << (PAGING_ADDR_OFFST_HIBIT + 1)) + off;
- 
-   /* Set up system call arguments for memory read */
-   struct sc_regs regs;
-   regs.a1 = SYSMEM_IO_READ; // Operation: Read from memory
-   regs.a2 = phyaddr;        // Physical address to read from
-   // regs.a3 = 0;             
-   
-   syscall(caller, 17, &regs);
- 
-   *data = (BYTE)regs.a3; 
- 
-   return 0;
- }
+
+  /* Get the page to MEMRAM, swap from MEMSWAP if needed */
+  if (pg_getpage(mm, pgn, &fpn, caller) != 0)
+    return -1; /* invalid page access */
+
+  /* Calculate physical address */
+  int phyaddr = (fpn << (PAGING_ADDR_OFFST_HIBIT + 1)) + off;
+
+  /* Set up system call arguments for memory read */
+  struct sc_regs regs;
+  regs.a1 = SYSMEM_IO_READ; // Operation: Read from memory
+  regs.a2 = phyaddr;        // Physical address to read from
+  // regs.a3 = 0;              // Not used for read operation
+
+  /* SYSCALL 17 sys_memmap to read data */
+  syscall(caller, 17, &regs);
+
+  /* Update data with read value */
+  *data = (BYTE)regs.a3; // Return value stored in a3
+
+  return 0;
+}
  
  /*pg_setval - write value to given offset
   *@mm: memory region
@@ -509,25 +509,21 @@
    /* Probe uninitialized newrg */
    newrg->rg_start = newrg->rg_end = -1;
  
-   /* Traverse the list of free regions to find a fit space */
    while (rgit != NULL)
    {
-     if (vmaid == 0) // Data region: allocate from low to high address
+     if (vmaid == 0) 
      {
        if (rgit->rg_start + size <= rgit->rg_end)
        {
-         // Current region has enough space
          newrg->rg_start = rgit->rg_start;
          newrg->rg_end = rgit->rg_start + size;
  
-         // Update left space in the chosen region
          if (rgit->rg_start + size < rgit->rg_end)
          {
            rgit->rg_start = rgit->rg_start + size;
          }
          else
          {
-           // Use up all space, remove current node
            struct vm_rg_struct *nextrg = rgit->rg_next;
  
            if (nextrg != NULL)
@@ -540,23 +536,20 @@
            }
            else
            {
-             // End of free list
              rgit->rg_start = rgit->rg_end = 0;
              rgit->rg_next = NULL;
            }
          }
-         break; // Region found, exit loop
+         break; 
        }
      }
-     else if (vmaid == 1) // Heap region: allocate from high to low address
+     else if (vmaid == 1) 
      {
        if (rgit->rg_end + size <= rgit->rg_start)
        {
-         // Current region has enough space
          newrg->rg_start = rgit->rg_start;
          newrg->rg_end = rgit->rg_start - size;
  
-         // Update remaining space in the chosen region
          if (rgit->rg_start - size > rgit->rg_end)
          {
            rgit->rg_start = rgit->rg_start - size;

@@ -52,10 +52,15 @@
  struct vm_rg_struct *get_vm_area_node_at_brk(struct pcb_t *caller, int vmaid, int size, int alignedsz)
  {
    struct vm_rg_struct *newrg;
+   /* TODO retrive current vma to obtain newrg, current comment out due to compiler redundant warning*/
    struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
  
    newrg = malloc(sizeof(struct vm_rg_struct));
  
+   /* TODO: update the newrg boundary
+   // newrg->rg_start = ...
+   // newrg->rg_end = ...
+   */
    if (vmaid == 0)
    {
      newrg->vmaid = 0;
@@ -64,6 +69,7 @@
    }
    else
    {
+     // implement for heap segment
      newrg->rg_start = cur_vma->sbrk;
      newrg->rg_end = newrg->rg_start - size + 1;
      newrg->vmaid = 1;
@@ -80,20 +86,21 @@
   *
   */
  int validate_overlap_vm_area(struct pcb_t *caller, int vmaid, int vmastart, int vmaend)
-{
-  struct vm_area_struct *vma = get_vma_by_num(caller->mm, vmaid);
-  unsigned char check;
-  if(vmaid){
-    check = (vmaend - vma->vm_end) > 0 ? -1 : 0;
-  }
-  else{
-    
-    check = ((vmaend - vma->vm_end) < 0 || ((vmastart >= vma->vm_start) && (vmastart < vma->vm_end)) || ((vmastart <= vma->vm_start) && (vmaend >= vma->vm_end))) ? -1 : 0;
-  }
-  /* TODO validate the planned memory area is not overlapped */
-  /* Nếu không phát hiện trùng lặp, trả về 0 */
-  return check;
-}
+ {
+   struct vm_area_struct *vma = get_vma_by_num(caller->mm, vmaid);
+   struct vm_area_struct *check_vma = get_vma_by_num(caller->mm, (vmaid) ? 0 : 1);
+   unsigned char check = 0;
+   if (vmaid)
+   {
+     check = (vmaend - check_vma->vm_end) > 0 ? 0 : 1;
+   }
+   else
+   {
+     check = (vmaend - check_vma->vm_end) < 0 ? 0 : 1;
+   }
+   return OVERLAP(vmastart, vmaend, vma->vm_start, vma->vm_end) || check;
+   return 0;
+ }
  
  /*inc_vma_limit - increase vm area limits to reserve space for new variable
   *@caller: caller
@@ -101,39 +108,38 @@
   *@inc_sz: increment size
   *
   */
- int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz) {
-  if(!caller) return -1;
-  if(vmaid > 1 || vmaid < 0) return -1;
+ int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz)
+ {
    struct vm_rg_struct *newrg = malloc(sizeof(struct vm_rg_struct));
-   
    int inc_amt = PAGING_PAGE_ALIGNSZ(inc_sz);
    int incnumpage = inc_amt / PAGING_PAGESZ;
    struct vm_rg_struct *area = get_vm_area_node_at_brk(caller, vmaid, inc_sz, inc_amt);
    struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
-   
+ 
    int old_end = cur_vma->vm_end;
-   
-   if (validate_overlap_vm_area(caller, vmaid, area->rg_start, area->rg_end) < 0){
-     return -1; 
+ 
+   /*Validate overlap of obtained region */
+   if (validate_overlap_vm_area(caller, vmaid, area->rg_start, area->rg_end) < 0)
+     return -1; /*Overlap and failed allocation */
+ 
+   /* TODO: Obtain the new vm area based on vmaid */
+   // cur_vma->vm_end...
+   //  inc_limit_ret...
+ 
+   if (vmaid == 0)
+   {
+     cur_vma->vm_end += inc_amt;
+     newrg->vmaid = 0;
    }
-  cur_vma->sbrk =cur_vma->vm_end;
-  cur_vma->vm_end = old_end + inc_amt;  
-   cur_vma->sbrk += inc_sz;
-   newrg->vmaid = vmaid;               
-   
-   if (vm_map_ram(caller, area->rg_start, area->rg_end, 
+   else
+   {
+     cur_vma->vm_end -= inc_amt;
+     newrg->vmaid = 1;
+   }
+ 
+   if (vm_map_ram(caller, area->rg_start, area->rg_end,
                   old_end, incnumpage, newrg) < 0)
-     return -1;
-   
-    if (inc_sz < inc_amt){
-      struct vm_rg_struct *newfreerg = malloc(sizeof(struct vm_rg_struct));
-      newfreerg->rg_start = cur_vma->sbrk;
-      newfreerg->rg_end = newrg->rg_end;
-      struct vm_rg_struct *freerg = cur_vma->vm_freerg_list;
-      newfreerg->rg_next = freerg;
-      cur_vma->vm_freerg_list = newfreerg;
-    }
-   return inc_amt;
+     return -1; /* Map the memory to MEMRAM */
  }
  
  // #endif
