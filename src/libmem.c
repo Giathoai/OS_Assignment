@@ -189,7 +189,7 @@
    int addr;
    if(!proc) return -1;
    /* By default using vmaid = 0 */
-   return __alloc(proc, 1, reg_index, size, &addr);
+   return __alloc(proc, 0, reg_index, size, &addr);
  }
  
  /*libfree - PAGING-based free a region memory
@@ -318,7 +318,7 @@
      return -1; /* invalid page access */
  
    /* Calculate physical address */
-   int phyaddr = (fpn * PAGING_ADDR_OFFST_HIBIT + 1) + off;
+   int phyaddr = (fpn << PAGING_ADDR_OFFST_HIBIT + 1) + off;
  
    /* Set up system call arguments for memory write */
    struct sc_regs regs;
