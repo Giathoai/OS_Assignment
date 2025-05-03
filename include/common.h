@@ -89,6 +89,8 @@ struct pcb_t
 	// Priority on execution (if supported), on-fly aka. changeable
 	// and this vale overwrites the default priority when it existed
 	uint32_t prio;
+	unsigned long vruntime;
+	int weight;
 #endif
 #ifdef MM_PAGING
 	struct mm_struct *mm;
