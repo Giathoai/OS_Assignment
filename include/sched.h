@@ -8,10 +8,6 @@
 #define CFS_SCHED
 #endif
 
-#ifdef CFS_SCHED
-#undef MLQ_SCHED // Ensure MLQ_SCHED is disabled
-#endif
-
 #define MAX_PRIO 140
 
 int queue_empty(void);

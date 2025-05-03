@@ -32,7 +32,7 @@ struct mmpaging_ld_args {
 static struct ld_args{
 	char ** path;
 	unsigned long * start_time;
-#ifdef MLQ_SCHED
+#ifdef CFS_SCHED
 	unsigned long * prio;
 #endif
 } ld_processes;
@@ -113,7 +113,7 @@ static void * ld_routine(void * args) {
 	printf("ld_routine\n");
 	while (i < num_processes) {
 		struct pcb_t * proc = load(ld_processes.path[i]);
-#ifdef MLQ_SCHED
+#ifdef CFS_SCHED
 		proc->prio = ld_processes.prio[i];
 #endif
 		while (current_time() < ld_processes.start_time[i]) {
@@ -175,7 +175,7 @@ static void read_config(const char * path) {
 #endif
 #endif
 
-#ifdef MLQ_SCHED
+#ifdef CFS_SCHED
 	ld_processes.prio = (unsigned long*)
 		malloc(sizeof(unsigned long) * num_processes);
 #endif
@@ -185,7 +185,7 @@ static void read_config(const char * path) {
 		ld_processes.path[i][0] = '\0';
 		strcat(ld_processes.path[i], "input/proc/");
 		char proc[100];
-#ifdef MLQ_SCHED
+#ifdef CFS_SCHED
 		fscanf(file, "%lu %s %lu\n", &ld_processes.start_time[i], proc, &ld_processes.prio[i]);
 #else
 		fscanf(file, "%lu %s\n", &ld_processes.start_time[i], proc);
