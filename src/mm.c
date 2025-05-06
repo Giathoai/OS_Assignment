@@ -101,7 +101,7 @@ int vmap_page_range(struct pcb_t *caller,           // process call
     {
       return -1;
     }
-    int temp_addr = (ret_rg->vmaid) ? (addr - pgit * PAGING_PAGESZ) : (addr + pgit * PAGING_PAGESZ);
+    int temp_addr =addr + pgit * PAGING_PAGESZ;
     pgn = PAGING_PGN(temp_addr);
     pte_set_fpn(&(caller->mm->pgd[pgn]), fpit->fpn);
 

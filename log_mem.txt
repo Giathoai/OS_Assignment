@@ -60,7 +60,7 @@ print_pgtbl: 0 - 768
 00000004: 80000000
 00000008: 80000002
 [32m[PASS][0m Test: Integration - Write to region
-read region=3 offset=10 value=-57
+read region=3 offset=10 value=7
 print_pgtbl: 0 - 768
 00000000: 80000001
 00000004: 80000000
@@ -68,7 +68,7 @@ print_pgtbl: 0 - 768
 [32m[PASS][0m Test: Integration - Read from region (return value)
 [31m[FAIL][0m Test: Integration - Read from region (data integrity)
   Expected: read_data = 0x42
-  Actual:   read_data = 0xffffffc7
+  Actual:   read_data = 0x07
 print_pgtbl: 0 - 768
 00000000: 80000001
 00000004: 80000000
@@ -171,7 +171,7 @@ print_pgtbl: 0 - 1536
 [32m[PASS][0m Test: Error Handling - Invalid VMA operation
 [32m[PASS][0m Test: Error Handling - Invalid region lookup
 [32m[PASS][0m Test: Error Handling - NULL process pointer
-read region=777 offset=0 value=-42
+read region=777 offset=0 value=64
 print_pgtbl: 0 - 0
 write region=777 offset=0 value=-86
 print_pgtbl: 0 - 0
