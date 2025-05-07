@@ -46,7 +46,7 @@ struct pcb_t * load(const char * path) {
 	FILE * file;
 	if ((file = fopen(path, "r")) == NULL) {
 		printf("Cannot find process description at '%s'\n", path);
-		exit(1);		
+		exit(1);
 	}
 	snprintf(proc->path, 2*sizeof(path)+1, "%s", path);
 	char opcode[10];

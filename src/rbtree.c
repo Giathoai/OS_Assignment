@@ -125,7 +125,7 @@ void inorder(Node* root, void (*print)(void*)) {
     inorder(root->right, print);
 }
 
-void initTree(RedBlackTree* tree, double (*cmp)(void*, void*), void (*print)(void*)) {
+void initTree(RedBlackTree* tree, int (*cmp)(void*, void*), void (*print)(void*)) {
     tree->root = NULL;
     tree->cmp = cmp;
     tree->print = print;
@@ -146,8 +146,13 @@ void destroyTree(Node* root) {
  * @param a the first double value
  * @param b the second double value
 **/
-double compareDouble(void* a, void* b) {
-    return *(double*)a - *(double*)b;
+int compareDouble(void* a, void* b) {
+    struct pcb_t* proc_a = (struct pcb_t*)a;
+    struct pcb_t* proc_b = (struct pcb_t*)b;
+    double diff = proc_a->vruntime - proc_b->vruntime;
+    if (diff < 0) return -1;
+    else if (diff > 0) return 1;
+    return 0;
 }
 
 void printInt(void* a) {
@@ -171,10 +176,12 @@ Node* replace_node(RedBlackTree* tree, Node* root, Node* target, Node* child) {
     }
     if (child != NULL)
         child->parent = target->parent;
-    return root;
+
+    return tree->root;
 }
 
-Node* delete_node(RedBlackTree* tree, Node* root, void* key, double (*cmp)(void*, void*)) {
+
+Node* delete_node(RedBlackTree* tree, Node* root, void* key, int (*cmp)(void*, void*)) {
     Node* z = root;
     while (z != NULL) {
         int comp = cmp(key, z->data);
@@ -183,7 +190,7 @@ Node* delete_node(RedBlackTree* tree, Node* root, void* key, double (*cmp)(void*
         else z = z->right;
     }
 
-    if (z == NULL) return root;  // Not found
+    if (z == NULL) return root;
 
     Node* y = z;
     Node* x = NULL;
@@ -217,18 +224,33 @@ Node* delete_node(RedBlackTree* tree, Node* root, void* key, double (*cmp)(void*
     z->data = NULL;
     free(z);
 
-    if (y_original_color == BLACK && x != NULL)
-        fixDelete(tree, x);
+    if (y_original_color == BLACK) {
+        if (x != NULL)
+            fixDelete(tree, x);
+        else {
+            Node* nil = (Node*)malloc(sizeof(Node));
+            nil->color = BLACK;
+            nil->left = nil->right = NULL;
+            nil->parent = y->parent;
+            fixDelete(tree, nil);
+            if (nil->parent != NULL) {
+                if (nil->parent->left == nil) nil->parent->left = NULL;
+                else if (nil->parent->right == nil) nil->parent->right = NULL;
+            }
+            free(nil);
+        }
+    }
 
     return tree->root;
 }
 
-
-
 void fixDelete(RedBlackTree* tree, Node* x) {
     while (x != tree->root && (x == NULL || x->color == BLACK)) {
+        if (x->parent == NULL) break; // Prevent segfault
+
         if (x == x->parent->left) {
             Node* w = x->parent->right;
+
             if (w != NULL && w->color == RED) {
                 w->color = BLACK;
                 x->parent->color = RED;
@@ -236,9 +258,10 @@ void fixDelete(RedBlackTree* tree, Node* x) {
                 w = x->parent->right;
             }
 
-            if ((w->left == NULL || w->left->color == BLACK) &&
-                (w->right == NULL || w->right->color == BLACK)) {
-                w->color = RED;
+            if ((w == NULL) ||
+                ((w->left == NULL || w->left->color == BLACK) &&
+                 (w->right == NULL || w->right->color == BLACK))) {
+                if (w) w->color = RED;
                 x = x->parent;
             } else {
                 if (w->right == NULL || w->right->color == BLACK) {
@@ -256,6 +279,7 @@ void fixDelete(RedBlackTree* tree, Node* x) {
             }
         } else {
             Node* w = x->parent->left;
+
             if (w != NULL && w->color == RED) {
                 w->color = BLACK;
                 x->parent->color = RED;
@@ -263,9 +287,10 @@ void fixDelete(RedBlackTree* tree, Node* x) {
                 w = x->parent->left;
             }
 
-            if ((w->right == NULL || w->right->color == BLACK) &&
-                (w->left == NULL || w->left->color == BLACK)) {
-                w->color = RED;
+            if ((w == NULL) ||
+                ((w->right == NULL || w->right->color == BLACK) &&
+                 (w->left == NULL || w->left->color == BLACK))) {
+                if (w) w->color = RED;
                 x = x->parent;
             } else {
                 if (w->left == NULL || w->left->color == BLACK) {
@@ -286,5 +311,3 @@ void fixDelete(RedBlackTree* tree, Node* x) {
 
     if (x) x->color = BLACK;
 }
-
-
