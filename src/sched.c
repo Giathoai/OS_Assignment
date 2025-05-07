@@ -131,7 +131,6 @@ double calculateWeight(uint32_t nice) {
 
 double get_total_weight(Node *node) {
     if (!node) return 0;
-	printf("concac");
     struct pcb_t *pcb = (struct pcb_t *)node->data;
     return calculateWeight(pcb->priority) + get_total_weight(node->left) + get_total_weight(node->right);
 }
@@ -158,7 +157,7 @@ struct pcb_t *get_proc(void) {
         return NULL;
     }
     struct pcb_t *proc = (struct pcb_t *)min_node->data;
-    cfs_rbtree.root = delete_node(&cfs_rbtree, cfs_rbtree.root, min_node->data, cfs_rbtree.cmp);
+    // cfs_rbtree.root = delete_node(&cfs_rbtree, cfs_rbtree.root, min_node->data, cfs_rbtree.cmp);
     pthread_mutex_unlock(&cfs_lock);
     
     return proc;
