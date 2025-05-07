@@ -114,7 +114,7 @@ static void * ld_routine(void * args) {
 	while (i < num_processes) {
 		struct pcb_t * proc = load(ld_processes.path[i]);
 #ifdef MLQ_SCHED
-		proc->prio = ld_processes.prio[i];
+		// proc->prio = ld_processes.prio[i];
 #endif
 		while (current_time() < ld_processes.start_time[i]) {
 			next_slot(timer_id);
@@ -126,8 +126,9 @@ static void * ld_routine(void * args) {
 		proc->mswp = mswp;
 		proc->active_mswp = active_mswp;
 #endif
-		printf("\tLoaded a process at %s, PID: %d PRIO: %ld\n",
-			ld_processes.path[i], proc->pid, ld_processes.prio[i]);
+		printf("\tLoaded a process at %s, PID: %d\n",
+			ld_processes.path[i], proc->pid);
+
 		add_proc(proc);
 		free(ld_processes.path[i]);
 		i++;
@@ -167,11 +168,11 @@ static void read_config(const char * path) {
 	 * Format: (size=0 result non-used memswap, must have RAM and at least 1 SWAP)
 	 *        MEM_RAM_SZ MEM_SWP0_SZ MEM_SWP1_SZ MEM_SWP2_SZ MEM_SWP3_SZ
 	*/
-	fscanf(file, "%d\n", &memramsz);
-	for(sit = 0; sit < PAGING_MAX_MMSWP; sit++)
-		fscanf(file, "%d", &(memswpsz[sit])); 
+	// fscanf(file, "%d\n", &memramsz);
+	// for(sit = 0; sit < PAGING_MAX_MMSWP; sit++)
+	// 	fscanf(file, "%d", &(memswpsz[sit])); 
 
-       fscanf(file, "\n"); /* Final character */
+    //    fscanf(file, "\n"); /* Final character */
 #endif
 #endif
 
@@ -271,6 +272,3 @@ int main(int argc, char * argv[]) {
 	return 0;
 
 }
-
-
-
