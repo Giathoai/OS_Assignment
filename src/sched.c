@@ -158,12 +158,7 @@ struct pcb_t *get_proc(void) {
         return NULL;
     }
     struct pcb_t *proc = (struct pcb_t *)min_node->data;
-	inorder(cfs_rbtree.root, printInt);
-	printf("\n");
-	printf("Get proc %d\n", proc->pid);
-    cfs_rbtree.root = delete_node(&cfs_rbtree, cfs_rbtree.root, proc, cfs_rbtree.cmp);
-	inorder(cfs_rbtree.root, printInt);
-	printf("\n");
+    cfs_rbtree.root = delete_node(&cfs_rbtree, min_node, proc, cfs_rbtree.cmp);
     proc->vruntime += proc->timeslice * (1.0 / calculateWeight(proc->priority));
     proc->timeslice = calculate_timeslice(proc);
 
