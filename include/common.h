@@ -76,21 +76,28 @@ struct page_table_t
 /* PCB, describe information about a process */
 struct pcb_t
 {
-	uint32_t pid;		 // PID
-	uint32_t priority;	 // Default priority, this legacy process based (FIXED)
+	int arrival_time;
+	int burst_time;
+	int remaining_time;
+	uint32_t pid;	   // PID
+	uint32_t priority; // Default priority, this legacy process based (FIXED)
 	char path[100];
 	struct code_seg_t *code; // Code segment
-	addr_t regs[10];	 // Registers, store address of allocated regions
-	uint32_t pc;		 // Program pointer, point to the next instruction
+	addr_t regs[10];		 // Registers, store address of allocated regions
+	uint32_t pc;			 // Program pointer, point to the next instruction
 	struct queue_t *ready_queue;
 	struct queue_t *running_list;
-#ifdef CFS_SCHED
+#ifdef MLQ_SCHED
 	struct queue_t *mlq_ready_queue;
 	// Priority on execution (if supported), on-fly aka. changeable
 	// and this vale overwrites the default priority when it existed
 	uint32_t prio;
-	unsigned long vruntime;
-	int weight;
+#endif
+#ifdef CFS_SCHED
+	// For CFS scheduling
+	uint32_t prio;			// Dynamic priority used by CFS
+	unsigned long vruntime; // Virtual runtime for CFS scheduling
+	unsigned long weight;	// Weight based on priority
 #endif
 #ifdef MM_PAGING
 	struct mm_struct *mm;
@@ -98,9 +105,12 @@ struct pcb_t
 	struct memphy_struct **mswp;
 	struct memphy_struct *active_mswp;
 	uint32_t active_mswp_id;
+#ifdef MM_PAGING_HEAP_GODOWN
+	uint32_t vmemsz;
+#endif
 #endif
 	struct page_table_t *page_table; // Page table
-	uint32_t bp;			 // Break pointer
+	uint32_t bp;					 // Break pointer
 };
 
 #endif

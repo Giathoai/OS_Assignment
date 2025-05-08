@@ -1,14 +1,19 @@
-#ifndef SCHED_H
-#define SCHED_H
+#ifndef QUEUE_H
+#define QUEUE_H
 
 #include "common.h"
 
-// Define scheduler type
-#ifndef CFS_SCHED
+/* Define scheduler type */
 #define CFS_SCHED
+
+#ifdef MLQ_SCHED
+#define MAX_PRIO 140
 #endif
 
-#define MAX_PRIO 140
+#ifdef CFS_SCHED
+#define DEFAULT_WEIGHT 1024 // Default process weight
+#define MIN_VRUNTIME 0      // Minimum virtual runtime
+#endif
 
 int queue_empty(void);
 

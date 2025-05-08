@@ -63,7 +63,7 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
     running_queue->size = new_size;
     
     for (int q = 0; q < MAX_PRIO; q++) {
-        struct queue_t *mlq_queue = &caller->mlq_ready_queue[q];
+        struct queue_t *mlq_queue = &caller->ready_queue[q];
         new_size = 0;
         
         for (int i = 0; i < mlq_queue->size; i++) {
