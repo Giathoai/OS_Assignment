@@ -1,0 +1,50 @@
+Time slot   0
+ld_routine
+        Loaded a process at input/proc/p1s, PID: 1 PRIO: 1
+Time slot   1
+        CPU 0: Dispatched process  1
+        Loaded a process at input/proc/p2s, PID: 2 PRIO: 2
+Time slot   2
+Time slot   3
+        CPU 0: Put process  1 to run queue
+        CPU 0: Dispatched process  2
+Time slot   4
+Time slot   5
+        CPU 0: Put process  2 to run queue
+        CPU 0: Dispatched process  2
+Time slot   6
+Time slot   7
+        CPU 0: Put process  2 to run queue
+        CPU 0: Dispatched process  2
+Time slot   8
+Time slot   9
+        CPU 0: Put process  2 to run queue
+        CPU 0: Dispatched process  2
+Time slot  10
+Time slot  11
+        CPU 0: Put process  2 to run queue
+        CPU 0: Dispatched process  2
+Time slot  12
+Time slot  13
+        CPU 0: Put process  2 to run queue
+        CPU 0: Dispatched process  2
+Time slot  14
+Time slot  15
+        CPU 0: Processed  2 has finished
+        CPU 0: Dispatched process  1
+Time slot  16
+Time slot  17
+        CPU 0: Put process  1 to run queue
+        CPU 0: Dispatched process  1
+Time slot  18
+Time slot  19
+        CPU 0: Put process  1 to run queue
+        CPU 0: Dispatched process  1
+Time slot  20
+Time slot  21
+        CPU 0: Put process  1 to run queue
+        CPU 0: Dispatched process  1
+Time slot  22
+Time slot  23
+        CPU 0: Processed  1 has finished
+        CPU 0 stopped
