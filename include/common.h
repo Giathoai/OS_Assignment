@@ -91,6 +91,7 @@ struct pcb_t
 	uint32_t prio;
 #else
 	double vruntime; // Virtual runtime, used in CFS scheduler
+	double timeslice; // Time slice, used in CFS scheduler
 #endif
 #ifdef MM_PAGING
 	struct mm_struct *mm;
