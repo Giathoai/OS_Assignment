@@ -120,7 +120,7 @@ void inorder(Node* root, void (*print)(void*)) {
         return;
 
     inorder(root->left, print);
-    print(root->data);
+    printf( "%d", ((struct pcb_t*)root->data)->priority);
     printf("(%c) ", root->color == RED ? 'R' : 'B');
     inorder(root->right, print);
 }

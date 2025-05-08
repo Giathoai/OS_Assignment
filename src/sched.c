@@ -126,27 +126,37 @@ void init_scheduler(void) {
 }
 
 double calculateWeight(uint32_t nice) {
-    return (1024.0 * pow(2, -1.0 * nice / 10.0));
+    return (1024.0 * pow(2, -1.0 * (double)nice / 10.0));
 }
 
+static double concac = 0;
 double get_total_weight(Node *node) {
     if (!node) return 0;
     struct pcb_t *pcb = (struct pcb_t *)node->data;
+	concac += calculateWeight(pcb->priority);
     return calculateWeight(pcb->priority) + get_total_weight(node->left) + get_total_weight(node->right);
 }
 
 double calculate_timeslice(struct pcb_t *proc) {
 	double total_weight = get_total_weight(cfs_rbtree.root);
     double proc_weight = calculateWeight(proc->priority);
-
     if (total_weight == 0) return 0;
-    return (proc_weight / total_weight) * TARGET_LATENCY;
+    return (proc_weight / total_weight) * 0.02;
 }
 
 Node* find_min_vruntime_node(Node *node) {
     if (!node) return NULL;
     while (node->left) node = node->left;
     return node;
+}
+
+void update_vruntime(struct pcb_t *proc, int run_time) {
+	double delta = (double)run_time;
+	double weight;
+	
+	weight = calculateWeight(proc->priority);
+	delta = delta / (double)weight;
+	proc->vruntime += delta;
 }
 
 struct pcb_t *get_proc(void) {
@@ -158,9 +168,10 @@ struct pcb_t *get_proc(void) {
         return NULL;
     }
     struct pcb_t *proc = (struct pcb_t *)min_node->data;
-    cfs_rbtree.root = delete_node(&cfs_rbtree, min_node, proc, cfs_rbtree.cmp);
-    proc->vruntime += proc->timeslice * (1.0 / calculateWeight(proc->priority));
+	//proc->vruntime += proc->timeslice * (1.0 / calculateWeight(proc->priority));
     proc->timeslice = calculate_timeslice(proc);
+    cfs_rbtree.root = delete_node(&cfs_rbtree, min_node, proc, cfs_rbtree.cmp);
+    
 
     pthread_mutex_unlock(&cfs_lock);
     return proc;

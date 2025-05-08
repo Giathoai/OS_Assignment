@@ -42,6 +42,7 @@ static void * timer_routine(void * args) {
 		}
 
 		/* Increase the time slot */
+		sleep(1);
 		_time++;
 		
 		/* Let devices continue their job */
