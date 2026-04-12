@@ -1,0 +1,428 @@
+
+[33m=== Running test: init_mm ===[0m
+[32m[PASS][0m Test: init_mm - VMA0 creation
+[32m[PASS][0m Test: init_mm - VMA0 initial values
+[32m[PASS][0m Test: init_mm - VMA0 freerg_list
+
+[33m=== Running test: inc_vma_limit ===[0m
+[32m[PASS][0m Test: inc_vma_limit - First increment (300 bytes)
+[32m[PASS][0m Test: inc_vma_limit - Second increment (400 bytes)
+[32m[PASS][0m Test: inc_vma_limit - Second increment (100 bytes)
+[32m[PASS][0m Test: inc_vma_limit - Free region update
+[32m[PASS][0m Test: inc_vma_limit - Free region boundaries
+
+[33m=== Running test: liballoc and libfree ===[0m
+[32m[PASS][0m Test: liballoc/libfree - Prepare memory space
+	register: 2; start: 0; end: 199
+print_pgtbl: 0 - 256
+00000000: 80000000
+[32m[PASS][0m Test: liballoc/libfree - Allocate memory (200 bytes, region 2)
+	register: 2; start: 400; end: 499
+print_pgtbl: 0 - 256
+00000000: 80000000
+[31m[FAIL][0m Test: liballoc/libfree - Allocate memory (100 bytes, region 2)
+  Expected: alloc_addr == 256
+  Actual:   alloc_addr = 0
+
+[33m=== Running test: init_memphy ===[0m
+[32m[PASS][0m Test: init_memphy - Small memory initialization
+[32m[PASS][0m Test: init_memphy - Free frame count (small)
+[32m[PASS][0m Test: init_memphy - Large memory initialization
+[32m[PASS][0m Test: init_memphy - Free frame count (large)
+
+[33m=== Running test: MEMPHY_read/write ===[0m
+[32m[PASS][0m Test: MEMPHY_read/write - Write single byte
+[32m[PASS][0m Test: MEMPHY_read/write - Read single byte (return value)
+[32m[PASS][0m Test: MEMPHY_read/write - Read single byte (data integrity)
+[32m[PASS][0m Test: MEMPHY_read/write - Multiple bytes
+[32m[PASS][0m Test: MEMPHY_read/write - Invalid address handling
+
+[33m=== Running test: MEMPHY_get_freefp and MEMPHY_put_freefp ===[0m
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Initial frame count
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Get free frame (return value)
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Frame count after get
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Put free frame (return value)
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Frame count after put
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Multiple operations
+[32m[PASS][0m Test: MEMPHY_get_freefp/put_freefp - Multiple operations (return value)
+
+[33m=== Running test: Integration - Memory allocation and I/O ===[0m
+[32m[PASS][0m Test: Integration - Memory allocation
+	register: 3; start: 512; end: 767
+print_pgtbl: 0 - 768
+00000000: 80000001
+00000004: 80000000
+00000008: 80000002
+[32m[PASS][0m Test: Integration - Region allocation
+write region=3 offset=10 value=66
+print_pgtbl: 0 - 768
+00000000: 80000001
+00000004: 80000000
+00000008: 80000002
+[32m[PASS][0m Test: Integration - Write to region
+read region=3 offset=10 value=7
+print_pgtbl: 0 - 768
+00000000: 80000001
+00000004: 80000000
+00000008: 80000002
+[32m[PASS][0m Test: Integration - Read from region (return value)
+[31m[FAIL][0m Test: Integration - Read from region (data integrity)
+  Expected: read_data = 0x42
+  Actual:   read_data = 0x07
+print_pgtbl: 0 - 768
+00000000: 80000001
+00000004: 80000000
+00000008: 80000002
+[32m[PASS][0m Test: Integration - Free region
+
+[33m=== Running test: Edge cases - Boundary testing ===[0m
+[32m[PASS][0m Test: Edge cases - Zero-size allocation
+[32m[PASS][0m Test: Edge cases - Very small allocation
+[32m[PASS][0m Test: Edge cases - Very large allocation
+[32m[PASS][0m Test: Edge cases - Invalid region ID for allocation
+[32m[PASS][0m Test: Edge cases - Non-existent region ID for free
+
+[33m=== Running test: Page Table Management ===[0m
+[32m[PASS][0m Test: Page Table Management - init_pte return value
+[32m[PASS][0m Test: Page Table Management - init_pte value check
+[32m[PASS][0m Test: Page Table Management - pte_set_swap return value
+[32m[PASS][0m Test: Page Table Management - pte_set_swap value check
+[32m[PASS][0m Test: Page Table Management - pte_set_fpn return value
+[32m[PASS][0m Test: Page Table Management - pte_set_fpn value check
+
+[33m=== Running test: VM Area Management ===[0m
+[32m[PASS][0m Test: VM Area Management - get_vm_area_node_at_brk basic
+[31m[FAIL][0m Test: VM Area Management - Region boundaries
+  Expected: Region with start=512, end=768
+  Actual:   Region with start=512, end=711
+[32m[PASS][0m Test: VM Area Management - validate_overlap_vm_area non-overlapping
+[32m[PASS][0m Test: VM Area Management - validate_overlap_vm_area overlapping
+
+[33m=== Running test: Page Swapping ===[0m
+[32m[PASS][0m Test: Page Swapping - __mm_swap_page return value
+[32m[PASS][0m Test: Page Swapping - Data verification
+
+[33m=== Running test: Memory Mapping ===[0m
+[32m[PASS][0m Test: Memory Mapping - alloc_pages_range return value
+[31m[FAIL][0m Test: Memory Mapping - Frame allocation count
+  Expected: Allocated 3 frames as requested
+  Actual:   Allocated 3 frames
+[32m[PASS][0m Test: Memory Mapping - vmap_page_range return value
+[32m[PASS][0m Test: Memory Mapping - Mapping region validity
+
+[33m=== Running test: Fragmentation Management ===[0m
+[32m[PASS][0m Test: Fragmentation Management - enlist_vm_freerg_list return
+[32m[PASS][0m Test: Fragmentation Management - Free region listing
+[32m[PASS][0m Test: Fragmentation Management - Multiple free regions
+
+[33m=== Running test: Multiple VM Areas Management ===[0m
+[32m[PASS][0m Test: Multiple VM Areas - Initial VMA existence
+	register: 1; start: 1024; end: 1123
+print_pgtbl: 0 - 1280
+00000000: 80000003
+00000004: 80000002
+00000008: 80000001
+00000012: 80000000
+00000016: 80000004
+	register: 2; start: 1224; end: 1423
+print_pgtbl: 0 - 1536
+00000000: 80000003
+00000004: 80000002
+00000008: 80000001
+00000012: 80000000
+00000016: 80000004
+00000020: 80000005
+	register: 3; start: 1124; end: 1273
+print_pgtbl: 0 - 1536
+00000000: 80000003
+00000004: 80000002
+00000008: 80000001
+00000012: 80000000
+00000016: 80000004
+00000020: 80000005
+[32m[PASS][0m Test: Multiple VM Areas - Multiple allocations
+[32m[PASS][0m Test: Multiple VM Areas - Symbol table entries
+print_pgtbl: 0 - 1536
+00000000: 80000003
+00000004: 80000002
+00000008: 80000001
+00000012: 80000000
+00000016: 80000004
+00000020: 80000005
+[32m[PASS][0m Test: Multiple VM Areas - Free middle region
+	ACCESS FREE REGION
+[32m[PASS][0m Test: Multiple VM Areas - Selective free integrity
+print_pgtbl: 0 - 1536
+00000000: 80000003
+00000004: 80000002
+00000008: 80000001
+00000012: 80000000
+00000016: 80000004
+00000020: 80000005
+print_pgtbl: 0 - 1536
+00000000: 80000003
+00000004: 80000002
+00000008: 80000001
+00000012: 80000000
+00000016: 80000004
+00000020: 80000005
+
+[33m=== Running test: Error Handling and Recovery ===[0m
+[32m[PASS][0m Test: Error Handling - Invalid VMA operation
+[32m[PASS][0m Test: Error Handling - Invalid region lookup
+[32m[PASS][0m Test: Error Handling - NULL process pointer
+read region=777 offset=0 value=64
+print_pgtbl: 0 - 0
+write region=777 offset=0 value=-86
+print_pgtbl: 0 - 0
+[32m[PASS][0m Test: Error Handling - Invalid region IO
+
+[33m=== Running test: Memory Stress Test ===[0m
+	register: 10; start: 0; end: 63
+print_pgtbl: 0 - 256
+00000000: 80000000
+	register: 11; start: 64; end: 127
+print_pgtbl: 0 - 256
+00000000: 80000000
+	register: 12; start: 127; end: 190
+print_pgtbl: 0 - 256
+00000000: 80000000
+	register: 13; start: 190; end: 253
+print_pgtbl: 0 - 256
+00000000: 80000000
+	register: 14; start: 128; end: 191
+print_pgtbl: 0 - 256
+00000000: 80000000
+	register: 15; start: 192; end: 255
+print_pgtbl: 0 - 256
+00000000: 80000000
+	register: 16; start: 256; end: 319
+print_pgtbl: 0 - 512
+00000000: 80000000
+00000004: 80000001
+	register: 17; start: 320; end: 383
+print_pgtbl: 0 - 512
+00000000: 80000000
+00000004: 80000001
+	register: 18; start: 383; end: 446
+print_pgtbl: 0 - 512
+00000000: 80000000
+00000004: 80000001
+	register: 19; start: 446; end: 509
+print_pgtbl: 0 - 512
+00000000: 80000000
+00000004: 80000001
+	register: 20; start: 384; end: 447
+print_pgtbl: 0 - 512
+00000000: 80000000
+00000004: 80000001
+	register: 21; start: 448; end: 511
+print_pgtbl: 0 - 512
+00000000: 80000000
+00000004: 80000001
+	register: 22; start: 512; end: 575
+print_pgtbl: 0 - 768
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+	register: 23; start: 576; end: 639
+print_pgtbl: 0 - 768
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+	register: 24; start: 639; end: 702
+print_pgtbl: 0 - 768
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+	register: 25; start: 702; end: 765
+print_pgtbl: 0 - 768
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+	register: 26; start: 640; end: 703
+print_pgtbl: 0 - 768
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+	register: 27; start: 704; end: 767
+print_pgtbl: 0 - 768
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+	register: 28; start: 768; end: 831
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 29; start: 832; end: 895
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+[32m[PASS][0m Test: Memory Stress - Multiple allocations
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+[32m[PASS][0m Test: Memory Stress - Selective free
+	register: 0; start: 896; end: 927
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 2; start: 30; end: 61
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 4; start: 61; end: 92
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 6; start: 92; end: 123
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 8; start: 123; end: 154
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 10; start: 154; end: 185
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 12; start: 185; end: 216
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 14; start: 216; end: 247
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 16; start: 247; end: 278
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+	register: 18; start: 278; end: 309
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+[32m[PASS][0m Test: Memory Stress - Reallocation
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+print_pgtbl: 0 - 1024
+00000000: 80000000
+00000004: 80000001
+00000008: 80000002
+00000012: 80000003
+[32m[PASS][0m Test: Memory Stress - Final cleanup

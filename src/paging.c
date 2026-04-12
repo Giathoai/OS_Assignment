@@ -1,4 +1,3 @@
-
 #include "mem.h"
 #include "cpu.h"
 #include "loader.h"
@@ -15,4 +14,3 @@ int main() {
 	dump();
 	return 0;
 }
-

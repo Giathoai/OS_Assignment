@@ -76,6 +76,9 @@ struct page_table_t
 /* PCB, describe information about a process */
 struct pcb_t
 {
+	int arrival_time;
+	int burst_time;
+	int remaining_time;
 	uint32_t pid;		 // PID
 	uint32_t priority;	 // Default priority, this legacy process based (FIXED)
 	char path[100];
@@ -96,6 +99,9 @@ struct pcb_t
 	struct memphy_struct **mswp;
 	struct memphy_struct *active_mswp;
 	uint32_t active_mswp_id;
+#ifdef MM_PAGING_HEAP_GODOWN
+	uint32_t vmemsz;
+#endif
 #endif
 	struct page_table_t *page_table; // Page table
 	uint32_t bp;			 // Break pointer
